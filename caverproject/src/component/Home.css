@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+#main{
+    display: flex;
+    justify-content: center;
+    background-color: black;
+    width: 100%;
+    padding: 2rem;
+}
+#container-out{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+#container{
+        display: flex;
+        flex-direction: column;
+        flex-direction: row;
+        max-width: 80rem;
+        justify-content: center;
+        justify-items: center;
+        padding: 2px;
+        margin-top: 0.75rem;
+        width: 100%;
+}
+#container-left{
+    display: flex;
+    flex-direction: column;
+    color: white;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.75rem;
+    padding: 0px 8px 0px 8px;
+    place-items: flex-start;
+}
