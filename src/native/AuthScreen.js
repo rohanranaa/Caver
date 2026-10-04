@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, Text } from "react-native";
+import { View } from "react-native";
+import { Text } from "./i18n";
 import { Screen, Heading, Input, Button, Choices } from "../stylematch/UI";
-import { s } from "./theme";
+import { useTheme } from "./theme";
 import {
   authConfigured,
   supabase,
@@ -10,6 +11,8 @@ import {
 } from "../platform/auth";
 import { useAuth } from "./AuthContext";
 export default function AuthScreen({ navigation }) {
+  const { s, colors, dark } = useTheme();
+
   const auth = useAuth();
   const [mode, setMode] = useState("Log in");
   const [email, setEmail] = useState("");

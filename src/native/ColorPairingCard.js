@@ -1,14 +1,17 @@
 import React from "react";
-import { View, Text, Linking } from "react-native";
+import { View, Linking } from "react-native";
+import { Text } from "./i18n";
 import {
   outfitColorPairing,
   pinterestInspirationUrl,
 } from "../stylematch/colorMatching";
 import { Button } from "../stylematch/UI";
 import { useStyleStore } from "./store";
-import { s, colors } from "./theme";
+import { useTheme } from "./theme";
 
 export default function ColorPairingCard({ look }) {
+  const { s, colors, dark } = useTheme();
+
   const notify = useStyleStore((state) => state.notify);
   const pairing = outfitColorPairing(look.items, look.colorApproach);
   if (!pairing) return null;
@@ -41,7 +44,9 @@ export default function ColorPairingCard({ look }) {
             <Text style={s.label}>
               {label} · {hex || "Unknown color"}
             </Text>
-            <Text style={s.small}>{item.name}</Text>
+            <Text style={s.small} translate={false}>
+              {item.name}
+            </Text>
           </View>
         ))}
       </View>

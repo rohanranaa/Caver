@@ -1,15 +1,18 @@
 import React, { useState } from "react";
-import { Text, View, Image, Switch } from "react-native";
+import { View, Image } from "react-native";
+import { Text, Switch } from "./i18n";
 import { Screen, Heading, Button, Choices, Chip } from "../stylematch/UI";
 import { useStyleStore } from "./store";
 import { useAuth } from "./AuthContext";
-import { s } from "./theme";
+import { useTheme } from "./theme";
 import { OCCASIONS } from "../stylematch/data";
 import { checkOutfit, ESSENTIALS } from "../stylematch/outfitCheck";
 import { pickClothingPhoto } from "../platform/photos";
 import { analyzeOutfit, analysisConfigured } from "../platform/outfitAnalysis";
 import ColorPairingCard from "./ColorPairingCard";
 export default function OutfitCheckScreen({ navigation, route }) {
+  const { s, colors, dark } = useTheme();
+
   const { items, weather } = useStyleStore();
   const auth = useAuth();
   const [selected, setSelected] = useState(

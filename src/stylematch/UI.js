@@ -1,19 +1,19 @@
 import React from "react";
 import {
   View,
-  Text,
-  Pressable,
-  TextInput,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   Modal,
 } from "react-native";
+import { Text, Pressable, TextInput } from "../native/i18n";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Icon from "./Icon";
 import Garment from "./Garment";
-import { s, colors } from "../native/theme";
+import { useTheme } from "../native/theme";
 export function Screen({ children, style, testID }) {
+  const { s, colors, dark } = useTheme();
+
   const insets = useSafeAreaInsets();
   return (
     <KeyboardAvoidingView
@@ -22,6 +22,8 @@ export function Screen({ children, style, testID }) {
       keyboardVerticalOffset={90}
     >
       <ScrollView
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
         testID={testID}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={[
@@ -46,6 +48,8 @@ export function Button({
   accessibilityLabel,
   danger,
 }) {
+  const { s, colors, dark } = useTheme();
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -66,7 +70,7 @@ export function Button({
         <Icon
           name={icon}
           size={16}
-          color={secondary ? colors.green : "white"}
+          color={secondary ? colors.green : colors.onAccent}
         />
       )}
       <Text style={[s.buttonText, secondary && s.secondaryText]}>
@@ -76,6 +80,8 @@ export function Button({
   );
 }
 export function Chip({ children, selected, onPress }) {
+  const { s, colors, dark } = useTheme();
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -92,6 +98,8 @@ export function Chip({ children, selected, onPress }) {
   );
 }
 export function Choices({ label, values, value, onChange, multiple = false }) {
+  const { s, colors, dark } = useTheme();
+
   return (
     <View style={{ gap: 10 }}>
       <Text style={s.label}>{label}</Text>
@@ -110,12 +118,14 @@ export function Choices({ label, values, value, onChange, multiple = false }) {
   );
 }
 export function Input({ label, ...props }) {
+  const { s, colors, dark } = useTheme();
+
   return (
     <View style={s.field}>
       <Text style={s.label}>{label}</Text>
       <TextInput
         accessibilityLabel={label}
-        placeholderTextColor="#8e9585"
+        placeholderTextColor={colors.muted}
         style={s.input}
         {...props}
       />
@@ -123,6 +133,8 @@ export function Input({ label, ...props }) {
   );
 }
 export function Heading({ eyebrow, title, subtitle, action }) {
+  const { s, colors, dark } = useTheme();
+
   return (
     <View style={{ gap: 9 }}>
       <Text style={s.eyebrow}>{eyebrow}</Text>
@@ -135,6 +147,8 @@ export function Heading({ eyebrow, title, subtitle, action }) {
   );
 }
 export function SectionTitle({ title, action, onPress }) {
+  const { s, colors, dark } = useTheme();
+
   return (
     <View style={s.between}>
       <Text accessibilityRole="header" style={s.sectionTitle}>
@@ -155,6 +169,8 @@ export function SectionTitle({ title, action, onPress }) {
   );
 }
 export function Score({ value }) {
+  const { s, colors, dark } = useTheme();
+
   return (
     <View style={s.score}>
       <Icon name="sparkle" size={13} />
@@ -163,6 +179,8 @@ export function Score({ value }) {
   );
 }
 export function GarmentCard({ item, onPress, width, palette = [] }) {
+  const { s, colors, dark } = useTheme();
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -180,7 +198,9 @@ export function GarmentCard({ item, onPress, width, palette = [] }) {
       </View>
       <View style={s.itemInfo}>
         <Text style={s.brand}>{item.brand || "MY WARDROBE"}</Text>
-        <Text style={s.itemName}>{item.name}</Text>
+        <Text style={s.itemName} translate={false}>
+          {item.name}
+        </Text>
         <Text style={s.small}>
           {item.color} ·{" "}
           {item.status === "incoming" ? "Incoming" : item.category}
@@ -190,6 +210,8 @@ export function GarmentCard({ item, onPress, width, palette = [] }) {
   );
 }
 export function OutfitBoard({ items, onItem, style }) {
+  const { s, colors, dark } = useTheme();
+
   return (
     <View style={[s.board, style]}>
       {items.map((item) => (
@@ -204,7 +226,7 @@ export function OutfitBoard({ items, onItem, style }) {
           <View style={{ width: "100%", flex: 1 }}>
             <Garment item={item} />
           </View>
-          <Text style={s.pieceLabel} numberOfLines={1}>
+          <Text style={s.pieceLabel} numberOfLines={1} translate={false}>
             {item.name}
           </Text>
         </Pressable>
@@ -213,6 +235,8 @@ export function OutfitBoard({ items, onItem, style }) {
   );
 }
 export function EmptyState({ title, description, action, icon = "wardrobe" }) {
+  const { s, colors, dark } = useTheme();
+
   return (
     <View style={s.empty}>
       <View style={s.emptyIcon}>
@@ -234,6 +258,8 @@ export function Confirm({
   onClose,
   action = "Remove",
 }) {
+  const { s, colors, dark } = useTheme();
+
   return (
     <Modal
       visible={visible}

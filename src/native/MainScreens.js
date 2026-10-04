@@ -1,11 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  TextInput,
-  useWindowDimensions,
-} from "react-native";
+import { View, useWindowDimensions } from "react-native";
+import { Text, Pressable, TextInput } from "./i18n";
 import { useStyleStore } from "./store";
 import { recommend } from "../stylematch/service";
 import { COLORS, CATEGORIES, OCCASIONS } from "../stylematch/data";
@@ -25,10 +20,12 @@ import Icon from "../stylematch/Icon";
 import { exportWardrobe } from "../platform/export";
 import { currentLocationWeather, fetchWeather } from "../platform/weather";
 import { useAuth } from "./AuthContext";
-import { s, colors } from "./theme";
+import { useTheme } from "./theme";
 import ColorPairingCard from "./ColorPairingCard";
 
 export function HomeScreen({ navigation }) {
+  const { s, colors, dark } = useTheme();
+
   const { items, profile, history, looks, weather, saveLook, wearLook } =
     useStyleStore();
   const [offset, setOffset] = useState(0);
@@ -389,6 +386,8 @@ export function HomeScreen({ navigation }) {
 }
 
 export function WardrobeScreen({ navigation }) {
+  const { s, colors, dark } = useTheme();
+
   const { items, profile } = useStyleStore();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All items");
@@ -464,6 +463,8 @@ export function WardrobeScreen({ navigation }) {
 }
 
 export function LooksScreen({ navigation }) {
+  const { s, colors, dark } = useTheme();
+
   const { looks, history } = useStyleStore();
   const [historyTab, setHistoryTab] = useState(false);
   const [filter, setFilter] = useState("All");
@@ -553,6 +554,8 @@ export function LooksScreen({ navigation }) {
 }
 
 export function ProfileScreen({ navigation }) {
+  const { s, colors, dark } = useTheme();
+
   const auth = useAuth();
   const state = useStyleStore();
   const { profile, items, looks } = state;
@@ -583,7 +586,9 @@ export function ProfileScreen({ navigation }) {
               .join("")}
           </Text>
         </View>
-        <Text style={s.h2}>{profile.name}</Text>
+        <Text style={s.h2} translate={false}>
+          {profile.name}
+        </Text>
         <Text style={s.small}>
           {auth?.session?.user.email || "Guest profile"} · saved on this device
         </Text>
@@ -618,7 +623,10 @@ export function ProfileScreen({ navigation }) {
       <View style={s.card}>
         <Text style={s.h3}>Your style DNA</Text>
         {[
-          ["Skin tone & undertone", `${profile.tone} · ${profile.undertone}`],
+          [
+            "Skin tone & undertone",
+            `${profile.tone === "Light" ? "Light skin" : profile.tone} · ${profile.undertone}`,
+          ],
           ["Preferred styles", profile.styles.join(", ") || "Not selected"],
           [
             "Glow colors",
@@ -655,6 +663,12 @@ export function ProfileScreen({ navigation }) {
       <View style={s.card}>
         <Text style={s.h3}>The little details</Text>
         <Button
+          title="App settings"
+          icon="settings"
+          secondary
+          onPress={() => navigation.navigate("Settings")}
+        />
+        <Button
           title="Explore your color palette"
           secondary
           icon="camera"
@@ -679,8 +693,8 @@ export function ProfileScreen({ navigation }) {
           onPress={() => setDeleting(true)}
         />
         <Text style={s.small}>
-          Export a copy before clearing app storage or reinstalling. Live
-          accounts and cloud sync aren’t connected yet.
+          Export a copy before clearing app storage or reinstalling. Cloud
+          wardrobe sync is not enabled.
         </Text>
       </View>
       <Confirm

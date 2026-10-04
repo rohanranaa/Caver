@@ -1,5 +1,6 @@
-import React, { useEffect } from "react";
-import { View, Text, Pressable, ActivityIndicator } from "react-native";
+import React, { useEffect, useState, useCallback } from "react";
+import { View, ActivityIndicator } from "react-native";
+import { Text, Pressable } from "./native/i18n";
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -30,36 +31,38 @@ import { AuthProvider, useAuth } from "./native/AuthContext";
 import AuthScreen from "./native/AuthScreen";
 import OutfitCheckScreen from "./native/OutfitCheckScreen";
 import WeatherScreen from "./native/WeatherScreen";
+import { useT } from "./native/i18n";
+import { useSettings } from "./native/settings";
+import SettingsScreen from "./native/SettingsScreen";
+import LaunchAnimation from "./native/LaunchAnimation";
 import Icon from "./stylematch/Icon";
-import { s, colors } from "./native/theme";
+import { useTheme } from "./native/theme";
 const Tabs = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
-const theme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    background: colors.bg,
-    card: colors.bg,
-    text: colors.ink,
-    primary: colors.green,
-    border: colors.line,
-  },
-};
 function MainTabs() {
+  const t = useT();
+  const language = useSettings((state) => state.language);
+  const { s, colors, dark } = useTheme();
+
   return (
     <Tabs.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
+        tabBarLabel: t(route.name === "Looks" ? "My looks" : route.name),
         tabBarActiveTintColor: colors.green,
-        tabBarInactiveTintColor: "#8b9380",
+        tabBarInactiveTintColor: colors.muted,
         tabBarStyle: {
-          backgroundColor: "#fff",
+          backgroundColor: colors.card,
           borderTopColor: colors.line,
           height: 76,
           paddingTop: 8,
           paddingBottom: 12,
         },
-        tabBarLabelStyle: { fontSize: 10, paddingTop: 4 },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          paddingTop: 4,
+          fontFamily: language === "ja" ? "StyleMatchJapanese" : undefined,
+        },
         tabBarIcon: ({ color }) => (
           <Icon
             name={
@@ -81,7 +84,7 @@ function MainTabs() {
       <Tabs.Screen
         name="Looks"
         component={LooksScreen}
-        options={{ tabBarLabel: "My looks" }}
+        options={{ tabBarLabel: t("My looks") }}
       />
       <Tabs.Screen name="Profile" component={ProfileScreen} />
     </Tabs.Navigator>
@@ -95,11 +98,43 @@ export default function App() {
   );
 }
 function AppContent() {
+  const t = useT();
+  const language = useSettings((state) => state.language);
+  const settingsReady = useSettings((state) => state.ready);
+  const [launchDone, setLaunchDone] = useState(false);
+  const finishLaunch = useCallback(() => setLaunchDone(true), []);
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const style = document.createElement("style");
+    style.textContent =
+      "* { scrollbar-width: none; } *::-webkit-scrollbar { display: none; }";
+    document.head.appendChild(style);
+    return () => style.remove();
+  }, []);
+
+  const { s, colors, dark } = useTheme();
+
+  const theme = {
+    ...DefaultTheme,
+    dark,
+    colors: {
+      ...DefaultTheme.colors,
+      background: colors.bg,
+      card: colors.bg,
+      text: colors.ink,
+      primary: colors.green,
+      border: colors.line,
+    },
+  };
+
   const auth = useAuth();
   const ready = useStyleStore((state) => state.ready);
   const notice = useStyleStore((state) => state.notice);
   const dismiss = useStyleStore((state) => state.dismiss);
-  const [fontsLoaded, fontError] = useFonts(Feather.font);
+  const [fontsLoaded, fontError] = useFonts({
+    ...Feather.font,
+    StyleMatchJapanese: require("../assets/fonts/NotoSansJP.ttf"),
+  });
   useEffect(() => {
     if (!notice) return;
     const timeout = setTimeout(dismiss, 5000);
@@ -107,9 +142,17 @@ function AppContent() {
   }, [notice, dismiss]);
   return (
     <SafeAreaProvider>
-      <StatusBar style="dark" />
-      <SafeAreaView style={s.fill} edges={["top", "left", "right"]}>
-        {!ready || !auth.ready || (!fontsLoaded && !fontError) ? (
+      <StatusBar style={dark ? "light" : "dark"} />
+      <SafeAreaView
+        style={[s.fill, { backgroundColor: colors.bg }]}
+        edges={["top", "left", "right"]}
+      >
+        {!launchDone ? (
+          <LaunchAnimation onFinish={finishLaunch} />
+        ) : !settingsReady ||
+          !ready ||
+          !auth.ready ||
+          (!fontsLoaded && !fontError) ? (
           <View
             style={[
               s.screen,
@@ -130,19 +173,28 @@ function AppContent() {
                 headerShadowVisible: false,
                 headerStyle: { backgroundColor: colors.bg },
                 headerTintColor: colors.green,
-                headerTitleStyle: { fontSize: 16 },
+                headerTitleStyle: {
+                  fontSize: 16,
+                  fontFamily:
+                    language === "ja" ? "StyleMatchJapanese" : undefined,
+                },
                 contentStyle: { backgroundColor: colors.bg },
               }}
             >
               <Stack.Screen
+                name="Settings"
+                component={SettingsScreen}
+                options={{ title: t("Settings") }}
+              />
+              <Stack.Screen
                 name="Account"
                 component={AuthScreen}
-                options={{ title: "Your account", presentation: "modal" }}
+                options={{ title: t("Your account"), presentation: "modal" }}
               />
               <Stack.Screen
                 name="OutfitCheck"
                 component={OutfitCheckScreen}
-                options={{ title: "Outfit check" }}
+                options={{ title: t("Outfit check") }}
               />
               <Stack.Screen
                 name="Main"
@@ -152,47 +204,47 @@ function AppContent() {
               <Stack.Screen
                 name="Style"
                 component={StyleScreen}
-                options={{ title: "Style me" }}
+                options={{ title: t("Style me") }}
               />
               <Stack.Screen
                 name="Result"
                 component={ResultScreen}
-                options={{ title: "Your look" }}
+                options={{ title: t("Your look") }}
               />
               <Stack.Screen
                 name="Clothing"
                 component={ClothingScreen}
-                options={{ title: "Your wardrobe" }}
+                options={{ title: t("Your wardrobe") }}
               />
               <Stack.Screen
                 name="ClothingDetail"
                 component={ClothingDetailScreen}
-                options={{ title: "A piece you love" }}
+                options={{ title: t("A piece you love") }}
               />
               <Stack.Screen
                 name="Preferences"
                 component={PreferencesScreen}
-                options={{ title: "Your style profile" }}
+                options={{ title: t("Your style profile") }}
               />
               <Stack.Screen
                 name="ColorIntro"
                 component={ColorIntroScreen}
-                options={{ title: "Your colors" }}
+                options={{ title: t("Your colors") }}
               />
               <Stack.Screen
                 name="Weather"
                 component={WeatherScreen}
-                options={{ title: "Dress for the day" }}
+                options={{ title: t("Dress for the day") }}
               />
               <Stack.Screen
                 name="Discover"
                 component={DiscoverScreen}
-                options={{ title: "Discover" }}
+                options={{ title: t("Discover") }}
               />
               <Stack.Screen
                 name="Product"
                 component={ProductScreen}
-                options={{ title: "A thoughtful addition" }}
+                options={{ title: t("A thoughtful addition") }}
               />
             </Stack.Navigator>
           </NavigationContainer>

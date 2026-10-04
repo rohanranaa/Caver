@@ -1,11 +1,6 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  Switch,
-  useWindowDimensions,
-} from "react-native";
+import { View, useWindowDimensions } from "react-native";
+import { Text, Pressable, Switch } from "./i18n";
 import { useStyleStore, getPersistenceError } from "./store";
 import { COLORS, CATEGORIES } from "../stylematch/data";
 import { getColorHex, normalizeHex } from "../stylematch/colorMatching";
@@ -21,14 +16,11 @@ import {
 import Garment from "../stylematch/Garment";
 import Icon from "../stylematch/Icon";
 import { pickClothingPhoto } from "../platform/photos";
-import { s, colors } from "./theme";
-const TYPES = {
-  Tops: ["shirt", "tshirt", "sweater"],
-  Bottoms: ["trousers"],
-  Shoes: ["sneakers", "boots", "loafers"],
-  Jackets: ["jacket"],
-  Accessories: ["bag"],
-};
+import { useTheme } from "./theme";
+import TYPES from "../stylematch/garmentTypes.json";
+import { useAuth } from "./AuthContext";
+import { analyzePhoto, analysisConfigured } from "../platform/outfitAnalysis";
+import SkinPalette from "./SkinPalette";
 const STYLES = [
   "Minimal",
   "Casual",
@@ -40,7 +32,12 @@ const STYLES = [
   "Sporty",
 ];
 export function ClothingScreen({ navigation, route }) {
+  const { s, colors, dark } = useTheme();
+
   const { items, saveItem, notify } = useStyleStore();
+  const auth = useAuth();
+  const [tags, setTags] = useState(null);
+  const [consent, setConsent] = useState(false);
   const existing = items.find((i) => i.id === route.params?.id);
   const [draft, setDraft] = useState(
     existing || {
@@ -68,7 +65,11 @@ export function ClothingScreen({ navigation, route }) {
     setBusy(true);
     try {
       const image = await pickClothingPhoto(camera);
-      if (image) update("image", image);
+      if (image) {
+        update("image", image);
+        setTags(null);
+        setConsent(false);
+      }
     } catch (e) {
       setError(e.message || "Couldn’t open your photos. Please try again.");
     } finally {
@@ -132,15 +133,107 @@ export function ClothingScreen({ navigation, route }) {
             {draft.image && (
               <Button
                 title="Use illustration"
+                disabled={busy}
                 secondary
-                onPress={() => update("image", undefined)}
+                onPress={() => {
+                  update("image", undefined);
+                  setTags(null);
+                  setConsent(false);
+                }}
               />
             )}
           </View>
           <Text style={s.small}>
-            Photos stay on your device. Tags are entered manually until the AI
-            service is connected. Use an image under 2 MB.
+            The photo stays on this device unless you choose AI analysis.
           </Text>
+          {draft.image && (
+            <View style={s.card}>
+              <Text style={s.small}>
+                AI suggests a type and fabric color. Review before applying;
+                lighting and backgrounds can affect estimates.
+              </Text>
+              <View style={s.row}>
+                <Switch
+                  accessibilityLabel="Allow clothing analysis"
+                  value={consent}
+                  onValueChange={setConsent}
+                  disabled={busy}
+                />
+                <Text style={[s.small, s.fill]}>
+                  Send this clothing photo to the AI service to estimate tags.
+                </Text>
+              </View>
+              <Button
+                title={busy ? "Analyzing…" : "Analyze clothing photo"}
+                disabled={
+                  busy || !consent || !analysisConfigured || !auth?.session
+                }
+                onPress={async () => {
+                  setBusy(true);
+                  setTags(null);
+                  setError("");
+                  try {
+                    const result = await analyzePhoto({
+                      image: draft.image,
+                      kind: "clothing",
+                      token: auth.session.access_token,
+                    });
+                    if (result.detected) setTags(result);
+                    else
+                      setError(
+                        "Could not identify one clothing item. Try a clearer photo of a single piece.",
+                      );
+                  } catch (error) {
+                    setError(error.message);
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              />
+              {(!analysisConfigured || !auth?.session) && (
+                <Text style={s.small}>
+                  AI tagging requires the configured service and a signed-in
+                  account. You can still enter details manually.
+                </Text>
+              )}
+              {tags && (
+                <View style={s.quiet}>
+                  <Text style={s.h3}>Review suggested tags</Text>
+                  <Text style={s.body}>
+                    {tags.category} · {tags.type} · {tags.color}
+                  </Text>
+                  <View
+                    style={[s.swatch, { backgroundColor: tags.colorHex }]}
+                  />
+                  <Text style={s.body}>{tags.colorHex}</Text>
+                  <Text style={s.small}>{tags.confidence}</Text>
+                  <Text style={s.small}>{tags.explanation}</Text>
+                  <Button
+                    title="Apply suggested tags"
+                    secondary
+                    disabled={busy}
+                    onPress={() => {
+                      if (
+                        !TYPES[tags.category]?.includes(tags.type) ||
+                        !normalizeHex(tags.colorHex)
+                      ) {
+                        setError("The analysis was incomplete. Please retry.");
+                        return;
+                      }
+                      setDraft((d) => ({
+                        ...d,
+                        category: tags.category,
+                        type: tags.type,
+                        color: tags.color,
+                      }));
+                      setHex(normalizeHex(tags.colorHex));
+                      setTags(null);
+                    }}
+                  />
+                </View>
+              )}
+            </View>
+          )}
         </View>
         <View style={{ flex: 1, gap: 22 }}>
           <Input
@@ -185,7 +278,7 @@ export function ClothingScreen({ navigation, route }) {
           <Text style={s.small}>
             Use a 3- or 6-digit HEX code for the fabric shade. Pick the closest
             color family above for palette preferences and Pinterest searches.
-            Photo colors are not detected automatically.
+            Use photo analysis for an editable estimate.
           </Text>
           <Choices
             label="Style"
@@ -257,6 +350,8 @@ export function ClothingScreen({ navigation, route }) {
 }
 
 export function ClothingDetailScreen({ navigation, route }) {
+  const { s, colors, dark } = useTheme();
+
   const { items, profile, removeItem } = useStyleStore();
   const item = items.find((i) => i.id === route.params.id);
   const [deleting, setDeleting] = useState(false);
@@ -358,6 +453,8 @@ export function ClothingDetailScreen({ navigation, route }) {
 }
 
 export function PreferencesScreen({ navigation, route }) {
+  const { s, colors, dark } = useTheme();
+
   const { profile, saveProfile } = useStyleStore();
   const [draft, setDraft] = useState(profile);
   const paletteOnly = route.params?.paletteOnly;
@@ -389,18 +486,7 @@ export function PreferencesScreen({ navigation, route }) {
           onChangeText={(name) => setDraft((d) => ({ ...d, name }))}
         />
       )}
-      <Choices
-        label="Skin tone"
-        values={["Very light", "Light", "Medium", "Tan", "Deep"]}
-        value={draft.tone}
-        onChange={(tone) => setDraft((d) => ({ ...d, tone }))}
-      />
-      <Choices
-        label="Undertone"
-        values={["Warm", "Cool", "Neutral"]}
-        value={draft.undertone}
-        onChange={(undertone) => setDraft((d) => ({ ...d, undertone }))}
-      />
+      <SkinPalette draft={draft} setDraft={setDraft} />
       {!paletteOnly && (
         <Choices
           label="Styles you feel good in"
@@ -486,6 +572,8 @@ export function PreferencesScreen({ navigation, route }) {
 }
 
 export function ColorIntroScreen({ navigation }) {
+  const { s, colors, dark } = useTheme();
+
   return (
     <Screen>
       <View style={s.emptyIcon}>
@@ -510,8 +598,8 @@ export function ColorIntroScreen({ navigation }) {
       </View>
       <View style={s.info}>
         <Text style={s.body}>
-          Selfie analysis isn’t connected yet. Choose your tone and colors
-          manually—no face photo is collected.
+          Choose a shade manually or use an optional selfie estimate. You decide
+          which colors to keep.
         </Text>
       </View>
       <Button

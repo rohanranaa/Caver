@@ -47,13 +47,13 @@ Photos are stored locally as data URIs, so temporary picker files do not disappe
 
 Add or edit a garment to choose its color family and exact HEX shade (3 or 6 digits). Existing pieces use their named color until you set a custom shade. In **Style me**, choose **Balanced**, **Tonal**, or **Bold contrast**. Recommendations compare top/bottom hues, saturation, and lightness, then show both swatches, HEX codes, and a pairing explanation. Color harmony adjusts suggestion order separately from the brief’s four weighted scores. Saved looks retain their garment colors.
 
-These are local styling heuristics, not AI image analysis. Photos are not automatically sampled; use the HEX field to specify a fabric shade. The 0–100 pairing estimate is a style preference guide, not a calibrated confidence score.
+These are local styling heuristics, not AI image analysis. Use optional clothing-photo analysis for an editable fabric estimate, or enter the HEX yourself. The 0–100 pairing estimate is a style preference guide, not a calibrated confidence score.
 
-**Find inspiration on Pinterest** opens an external search using generic color families, garment type, and occasion. No wardrobe names, photos, skin data, or HEX values are included in the search. Pinterest may show related colors or require sign-in. There is no Pinterest account/API connection: the [official API specification](https://github.com/pinterest/api-description/blob/main/v5/openapi.yaml) documents approved beta access for partner Pin search, and a Pin’s dominant color describes the whole image. A provider-backed clothing analysis integration would need an approved API and suitable image analysis service.
+**Find inspiration on Pinterest** opens an external search using generic color families, garment type, and occasion. No wardrobe names, photos, skin data, or HEX values are included in the search. Pinterest may show related colors or require sign-in. There is no Pinterest account/API connection: the [official API specification](https://github.com/pinterest/api-description/blob/main/v5/openapi.yaml) documents approved beta access for partner Pin search, and a Pin’s dominant color describes the whole image. Pinterest-backed Pin analysis would need approved API access; the clothing-photo analysis below uses a separate vision service.
 
 ## Still demo integrations
 
-AI face analysis, AI clothing tagging, real retail feeds, checkout, and push notifications remain unconnected. Authentication and outfit-photo analysis have provider adapters and require configuration below. The app does not collect a face photo; color preferences are manual. Weather uses Open-Meteo with location/city selection. Wardrobe recommendations use local rules; the optional outfit-photo check uses the configured AI server. API keys must stay on a future backend.
+Real retail feeds, checkout, and push notifications remain unconnected. Authentication, outfit checks, clothing tags, and optional selfie shade estimates have provider adapters and require configuration below. Selfie upload requires explicit consent; manual shade selection works without a provider. Weather uses Open-Meteo with location/city selection. Wardrobe recommendations use local rules; the optional outfit-photo check uses the configured AI server. Secret API keys stay on the included server.
 
 ## Validation
 
@@ -111,3 +111,20 @@ Photo bytes are transient in the request and never written by this server or app
 **Check my outfit → Choose your pieces** works without AI. Missing tops, bottoms, footwear, weather layers, and optional replacement choices lead to filtered sample products and brand websites. These links do not guarantee stock, current prices, or a particular size. Purchases are handled by the retailer.
 
 Additional verification: `npm run test:server`. Provider boundary tests use synthetic responses; real confirmation email delivery, Google/Apple OAuth, and AI image quality require your configured accounts and device checks.
+
+
+## Appearance, language, and launch
+
+**Profile → App settings** offers Light, Dark, or System appearance, plus English and Japanese. Settings persist on the device separately from account wardrobes and apply to navigation, forms, cards, dialogs, icons, and launch/auth screens. Garment and skin swatches retain their actual colors. UI copy is translated; personal names, brands, and existing user content stay as entered. New AI explanations request the selected language. External provider messages may remain in their original language.
+
+The launch screen uses a ~2.1-second brand animation. Reduced-motion users see a static mark for the same brief interval. Scroll indicators are hidden on native and web while scrolling remains enabled. System appearance on native uses `userInterfaceStyle: automatic` and Expo System UI; rebuild native binaries after changing config.
+
+## Clothing tags and skin palette
+
+- **Add/edit clothing → Take photo/Gallery → Allow clothing analysis → Analyze clothing photo** estimates a supported garment type, nearest color family, and HEX shade. Review the result before applying. Names, ownership, waterproofing, and brand are not inferred. All fields remain editable. Supported types include shirts, T-shirts, sweaters, trousers, shorts, skirts, shoes, jackets/coats, bags, hats, scarves, and belts. No clear item or uncertain results are explicitly reported.
+- **Edit preferences** includes ten illustrative skin swatches and undertone choices. You can take a daylight selfie or select a photo, consent to upload, and request a visible-shade estimate. Confirm the estimate before using it. The temporary selfie is not persisted to the wardrobe; it is removed from the screen after applying or leaving. This is an on-demand photo check, not continuous camera monitoring.
+- Palette suggestions offer colors to try near the face and compare in daylight. Lighting, makeup, and camera processing affect estimates. These are optional styling heuristics, not calibrated colorimetry, race/ethnicity detection, or objective claims that a color makes someone beautiful or dull. Applying a palette changes the saved preferred colors after **Save my preferences**, which feeds existing recommendations. Manual edits take priority.
+
+Both new routes (`POST /api/clothing-tags`, `POST /api/skin-palette`) use the same server-only AI credentials and authenticated Supabase session as outfit checks, with shared rate limits and upload bounds. No new public API key is needed. Set `OPENAI_BASE_URL` only for a trusted provider implementing **Responses API**, image inputs, and strict JSON schemas; a generic chat-completions-only endpoint is not interchangeable. Live model quality requires your configured vision provider and representative photo testing. Never paste secret keys into chat or commit them.
+
+Japanese text uses the bundled Noto Sans JP font from the [Google Fonts repository](https://github.com/google/fonts/tree/main/ofl/notosansjp), licensed under the SIL Open Font License in `assets/fonts/OFL.txt`. The bundled static regular-weight instance adds approximately 5.8 MB before compression and avoids missing characters on devices without Japanese system fonts. It was generated with fontTools 4.60.1, retaining all 16,732 mapped characters and renaming the internal family to StyleMatchJapanese; bold text is synthesized by the renderer.

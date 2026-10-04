@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { Text } from "./i18n";
 import { Screen, Heading, Button, Input } from "../stylematch/UI";
 import { useStyleStore } from "./store";
 import {
@@ -7,8 +8,10 @@ import {
   fetchWeather,
   currentLocationWeather,
 } from "../platform/weather";
-import { s } from "./theme";
+import { useTheme } from "./theme";
 export default function WeatherScreen() {
+  const { s, colors, dark } = useTheme();
+
   const { weather, setWeather } = useStyleStore();
   const [query, setQuery] = useState("");
   const [cities, setCities] = useState([]);

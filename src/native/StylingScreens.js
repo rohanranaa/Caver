@@ -1,15 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,
-  Text,
-  TextInput,
-  Pressable,
   ActivityIndicator,
   Share,
   Platform,
   Linking,
   useWindowDimensions,
 } from "react-native";
+import { Text, TextInput, Pressable } from "./i18n";
 import * as Clipboard from "expo-clipboard";
 import { useStyleStore } from "./store";
 import { createOutfit } from "../stylematch/service";
@@ -26,12 +24,14 @@ import {
 } from "../stylematch/UI";
 import Garment from "../stylematch/Garment";
 import Icon from "../stylematch/Icon";
-import { s, colors } from "./theme";
+import { useTheme } from "./theme";
 import { BRAND_LINKS } from "../stylematch/outfitCheck";
 import ColorPairingCard from "./ColorPairingCard";
 import { COLOR_APPROACHES } from "../stylematch/colorMatching";
 
 export function StyleScreen({ navigation, route }) {
+  const { s, colors, dark } = useTheme();
+
   const state = useStyleStore();
   const [occasion, setOccasion] = useState(route.params?.occasion || "Casual");
   const [mood, setMood] = useState(route.params?.mood || "Effortless");
@@ -156,6 +156,8 @@ export function StyleScreen({ navigation, route }) {
 }
 
 export function ResultScreen({ navigation, route }) {
+  const { s, colors, dark } = useTheme();
+
   const {
     look,
     preferences = {
@@ -362,6 +364,8 @@ export function ResultScreen({ navigation, route }) {
 }
 
 export function DiscoverScreen({ navigation, route }) {
+  const { s, colors, dark } = useTheme();
+
   const categories = route?.params?.categories || [];
   const { profile } = useStyleStore();
   const { width } = useWindowDimensions();
@@ -456,8 +460,12 @@ export function DiscoverScreen({ navigation, route }) {
               <Garment item={product} />
             </View>
             <View style={s.itemInfo}>
-              <Text style={s.brand}>{product.brand}</Text>
-              <Text style={s.itemName}>{product.name}</Text>
+              <Text style={s.brand} translate={false}>
+                {product.brand}
+              </Text>
+              <Text style={s.itemName} translate={false}>
+                {product.name}
+              </Text>
               <Text style={s.body}>${product.price}</Text>
               <Score value={product.match} />
             </View>
@@ -474,6 +482,8 @@ export function DiscoverScreen({ navigation, route }) {
 }
 
 export function ProductScreen({ navigation, route }) {
+  const { s, colors, dark } = useTheme();
+
   const product = PRODUCTS.find((p) => p.id === route.params.id);
   const { items, saveItem, notify } = useStyleStore();
   if (!product)

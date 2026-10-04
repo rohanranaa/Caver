@@ -1,6 +1,7 @@
 import http from "node:http";
 import { pathToFileURL } from "node:url";
 import { validRequest, analyze } from "./analysis.mjs";
+import { validPhotoRequest, analyzePhoto } from "./photoAnalysis.mjs";
 export function createServer(config, fetcher = fetch) {
   const quotas = new Map();
   return http.createServer(async (req, res) => {
@@ -42,13 +43,18 @@ export function createServer(config, fetcher = fetch) {
       });
       return;
     }
-    if (req.url !== "/api/outfit-check" || req.method !== "POST") {
+    const kind = {
+      "/api/outfit-check": "outfit",
+      "/api/clothing-tags": "clothing",
+      "/api/skin-palette": "skin",
+    }[req.url];
+    if (!kind || req.method !== "POST") {
       send(404, { error: "Not found" });
       return;
     }
     if (!config.supabaseUrl || !config.supabaseKey || !config.openaiKey) {
       send(503, {
-        error: "AI outfit checks are awaiting service configuration.",
+        error: "AI photo analysis is awaiting service configuration.",
       });
       return;
     }
@@ -77,7 +83,7 @@ export function createServer(config, fetcher = fetch) {
       const quota = quotas.get(user.id) || { count: 0, reset: now + 3600000 };
       if (quota.count >= 10 || (quotas.size >= 10000 && !quotas.has(user.id))) {
         send(429, {
-          error: "Outfit check limit reached. Please try again later.",
+          error: "Photo analysis limit reached. Please try again later.",
         });
         return;
       }
@@ -102,14 +108,19 @@ export function createServer(config, fetcher = fetch) {
         send(400, { error: "Invalid request." });
         return;
       }
-      if (!validRequest(body)) {
+      if (!(kind === "outfit" ? validRequest(body) : validPhotoRequest(body))) {
         send(400, {
           error:
-            "Choose a JPEG, PNG, or WebP outfit photo and a valid occasion.",
+            kind === "outfit"
+              ? "Choose a JPEG, PNG, or WebP outfit photo and a valid occasion."
+              : "Choose a JPEG, PNG, or WebP photo.",
         });
         return;
       }
-      const result = await analyze(body, config, fetcher);
+      const result =
+        kind === "outfit"
+          ? await analyze(body, config, fetcher)
+          : await analyzePhoto(body, kind, config, fetcher);
       send(200, result);
     } catch {
       send(502, {

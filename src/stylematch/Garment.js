@@ -22,7 +22,7 @@ export default function Garment({ item }) {
         resizeMode="contain"
       />
     );
-  const isShirt = ["shirt", "jacket"].includes(item.type);
+  const isShirt = ["shirt", "jacket", "coat"].includes(item.type);
   return (
     <Svg
       width="100%"
@@ -105,6 +105,39 @@ export default function Garment({ item }) {
               <Path d="m22 172 28 9m143 0 25-8" fill="none" />
             )}
           </>
+        ) : item.type === "hat" ? (
+          <>
+            <Path d="M68 130 81 68Q120 40 160 68L173 130Z" />
+            <Path d="M31 132Q120 105 210 132L224 153Q120 190 16 153Z" />
+            <Path d="M70 120Q120 134 171 120" fill="none" />
+          </>
+        ) : item.type === "scarf" ? (
+          <>
+            <Path d="M80 33h42v174H80ZM120 46h41v161h-41Z" />
+            <Path d="M80 190h42m-42 8h42m0-10h39" fill="none" />
+          </>
+        ) : item.type === "belt" ? (
+          <>
+            <Path d="M32 107h175v37H32Z" />
+            <Path d="M72 100h48v51H72Z" fill="none" strokeWidth="7" />
+            <Path d="M98 123h45" strokeWidth="5" />
+          </>
+        ) : item.type === "skirt" ? (
+          <>
+            <Path d="M76 38h89l39 177H37Z" />
+            <Path
+              d="M72 60h98m-84 7-18 138m53-138v143m31-143 23 138"
+              fill="none"
+            />
+          </>
+        ) : item.type === "shorts" ? (
+          <>
+            <Path d="M62 51h116l10 114-59 4-9-56-9 56-59-4Z" />
+            <Path
+              d="M64 68h113m-57 0v45m-29-44-25 23m83-23 26 23"
+              fill="none"
+            />
+          </>
         ) : item.type === "trousers" ? (
           <>
             <Path d="M67 23Q120 29 174 23L181 104l-15 126-42-2-5-113-6 113-43 2-9-126Z" />
@@ -119,7 +152,7 @@ export default function Garment({ item }) {
             <Path d="M79 26v16m23-14v15m34-15v15m23-16v16" strokeWidth="4" />
             <Circle cx="121" cy="33" r="2" fill="#74634c" />
           </>
-        ) : ["sneakers", "loafers", "boots"].includes(item.type) ? (
+        ) : ["sneakers", "loafers", "boots", "sandals"].includes(item.type) ? (
           <G transform="translate(0 -8)">
             <G transform="rotate(-22 120 110)">
               <Path
