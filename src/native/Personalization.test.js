@@ -54,18 +54,28 @@ test("appearance and Japanese persist without changing stored enum values", asyn
   ).toContain("トップス、シューズ");
   expect(translate("My own name", "ja")).toBe("My own name");
 });
-test("launch lasts about two seconds and respects reduced motion", async () => {
-  jest.useFakeTimers();
-  jest
-    .spyOn(AccessibilityInfo, "isReduceMotionEnabled")
-    .mockResolvedValue(true);
-  const finish = jest.fn();
-  await render(<LaunchAnimation onFinish={finish} />);
-  await act(async () => jest.advanceTimersByTime(2000));
-  expect(finish).not.toHaveBeenCalled();
-  await act(async () => jest.advanceTimersByTime(100));
-  expect(finish).toHaveBeenCalledTimes(1);
-});
+test.each(["light", "dark"])(
+  "%s launch has unique keys, lasts about two seconds and respects reduced motion",
+  async (appearance) => {
+    useSettings.setState({ appearance });
+    const errors = jest.spyOn(console, "error");
+    jest.useFakeTimers();
+    jest
+      .spyOn(AccessibilityInfo, "isReduceMotionEnabled")
+      .mockResolvedValue(true);
+    const finish = jest.fn();
+    await render(<LaunchAnimation onFinish={finish} />);
+    await act(async () => jest.advanceTimersByTime(2000));
+    expect(finish).not.toHaveBeenCalled();
+    await act(async () => jest.advanceTimersByTime(100));
+    expect(finish).toHaveBeenCalledTimes(1);
+    expect(
+      errors.mock.calls.some((args) =>
+        args.some((value) => String(value).includes("same key")),
+      ),
+    ).toBe(false);
+  },
+);
 test("manual shade and palette selection preserve opt-in and disjoint preference lists", async () => {
   function Form() {
     const [draft, setDraft] = React.useState({

@@ -69,14 +69,14 @@ export default function LaunchAnimation({ onFinish }) {
       </Animated.View>
       <Text style={[s.logo, { fontSize: 32 }]}>StyleMatch.</Text>
       <View style={{ flexDirection: "row", gap: 9 }}>
-        {[colors.pop, colors.sky, colors.lime].map((color, index) => (
+        {["pop", "sky", "lime"].map((token, index) => (
           <Animated.View
-            key={color}
+            key={token}
             style={{
               width: 12,
               height: 12,
               borderRadius: 6,
-              backgroundColor: color,
+              backgroundColor: colors[token],
               opacity: progress.interpolate({
                 inputRange: [0, 0.2 + index * 0.15, 1],
                 outputRange: [0, 0.2, 1],
