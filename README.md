@@ -1,70 +1,70 @@
-# Getting Started with Create React App
+# StyleMatch · Expo / React Native
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A personal stylist built with **Expo SDK 57**, **React Native 0.86.3**, and **React 19.2.3**. The same native component tree runs on iOS, Android, and the web; navigation uses React Navigation and local state uses Zustand + AsyncStorage.
 
-## Available Scripts
+## Start on your phone
 
-In the project directory, you can run:
+Requirements: Node.js 24+, npm, and Expo Go compatible with SDK 57 on your phone.
 
-### `npm start`
+```sh
+npm ci
+npm start
+```
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Run these commands from this repository on your computer. Connect your computer and phone to the same network, then scan the terminal QR code with Expo Go (Android) or the Camera app (iOS). If LAN discovery is unavailable, `npx expo start --tunnel` is an alternative that requires Expo's tunnel helper and an internet connection. The cloud sandbox's localhost URL is for the browser preview; it is not a phone-accessible Expo QR endpoint.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### Browser preview
 
-### `npm test`
+```sh
+npm run web
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Open http://localhost:3000. The Coding Agent Preview runs this Expo web target. It is useful for inspecting shared screens, but it does not replace testing native permissions, camera, and share sheets on a phone.
 
-### `npm run build`
+### Simulators and native builds
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```sh
+npm run android       # Expo Go on an available Android emulator
+npm run ios           # Expo Go on an available iOS simulator (macOS)
+npx expo run:android  # Generate/build native Android app; requires Android SDK/JDK
+npx expo run:ios      # Generate/build native iOS app; requires macOS/Xcode
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+`app.json` declares the app IDs, icons, orientation, camera/photo permission descriptions, and native config plugins. Replace the app IDs with your production identifiers before distribution. No EAS account or store credentials are required to work on the local app.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## What works
 
-### `npm run eject`
+- Native Home / Wardrobe / My looks / Profile tabs and stack navigation.
+- Daily outfit recommendations, four weighted scores, weather/occasion/mood rules, locked pieces, missing-category detection, and seven-day repeat avoidance.
+- Native camera/gallery import with permission handling; manual clothing details, search/filter, edit, remove, and incoming/owned status.
+- Saved outfits, wear history, native Share sheet (clipboard fallback on web), editable glow/avoid palettes and preferences.
+- Persistent device storage, migration of the earlier web preview's local wardrobe, JSON export via the native share sheet (download on web), and delete data.
+- Sample shopping products with brand/search/budget filtering and retailer links. Explicitly marking a purchased sample item incoming does not place an order.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Photos are stored locally as data URIs, so temporary picker files do not disappear after a restart. The per-photo limit is approximately 2 MB; export before clearing storage or reinstalling. There is no cloud backup.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Still demo integrations
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Accounts/email verification, AI face analysis, AI clothing tagging, live location/weather, real retail feeds, checkout, and push notifications need backend/provider integration. The app does not collect a face photo; color preferences are manual. Weather is editable sample data. Recommendations and explanations use deterministic local rules. API keys must stay on a future backend.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Validation
 
-## Learn More
+```sh
+npm run check   # Expo SDK dependency compatibility
+npm test        # jest-expo + React Native Testing Library and core logic tests
+npm run build   # Metro/Hermes export for iOS, Android, and web to dist/
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+An export verifies JS/native-module resolution and Hermes compilation; it is not an APK/IPA build or physical-device test. The Linux task sandbox has no Xcode or Android emulator. Verify camera permissions, image selection, native sharing, and safe areas on devices before release.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+The SDK-compatible tooling currently has upstream npm audit advisories in braces, node-forge, uuid and their dependent tools. Nonbreaking fixes have been applied; forced downgrades of Expo/Jest are not appropriate fixes for this project.
 
-### Code Splitting
+## Source map
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- `index.js`, `app.json`, `metro.config.js`: Expo entry point and configuration.
+- `src/App.js`: native stack/tabs, safe area, font loading, and toast UI.
+- `src/native/`: native screens, Zustand/AsyncStorage adapter, design tokens.
+- `src/stylematch/`: shared outfit rules, demo data, native garment SVGs and reusable native components.
+- `src/platform/`: image picker and platform-specific wardrobe export.
 
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+The original repository's unused `src/component/` and `src/images/` assets are retained as historical source; they are not imported by the Expo application.

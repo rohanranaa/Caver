@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "StyleMatch",
+    "slug": "stylematch",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "stylematch",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.stylematch.app"
+    },
+    "android": {
+      "package": "com.stylematch.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F7F6F2"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./public/favicon.svg",
+      "name": "StyleMatch",
+      "description": "Your wardrobe. Your personal stylist."
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "StyleMatch uses photos you choose to add clothes to your wardrobe.",
+          "cameraPermission": "StyleMatch uses your camera to photograph clothes for your wardrobe.",
+          "microphonePermission": false
+        }
+      ],
+      "expo-font",
+      "expo-sharing"
+    ],
+    "icon": "./assets/icon.png"
+  }
+}
