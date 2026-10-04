@@ -1,11 +1,12 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { View, useWindowDimensions } from "react-native";
-import { Text, Pressable, TextInput } from "./i18n";
+import { Text, Pressable } from "./i18n";
 import { useStyleStore } from "./store";
 import { recommend } from "../stylematch/service";
 import { COLORS, CATEGORIES, OCCASIONS } from "../stylematch/data";
 import {
   Screen,
+  SearchBar,
   Button,
   Heading,
   SectionTitle,
@@ -85,12 +86,12 @@ export function HomeScreen({ navigation }) {
       </View>
       <View style={[s.between, { flexWrap: "wrap", paddingVertical: 10 }]}>
         <Heading
-          eyebrow="A LITTLE INSPIRATION FOR YOUR EVERYDAY"
+          eyebrow="YOUR STYLE. YOUR ERA."
           title={`Good morning, ${profile.name.split(" ")[0]}`}
           subtitle="Less “what to wear.” More being you."
         />
         <Button
-          title="Style me"
+          title="Build my fit"
           icon="sparkle"
           onPress={() => navigation.navigate("Style")}
         />
@@ -108,7 +109,7 @@ export function HomeScreen({ navigation }) {
         </View>
       )}
       <Button
-        title="Check my outfit"
+        title="Fit check"
         icon="camera"
         secondary
         onPress={() => navigation.navigate("OutfitCheck")}
@@ -116,7 +117,7 @@ export function HomeScreen({ navigation }) {
       <View style={{ flexDirection: wide ? "row" : "column", gap: 22 }}>
         <View style={{ flex: 1, gap: 23 }}>
           <View style={s.section}>
-            <SectionTitle title="Your daily dose of good style" />
+            <SectionTitle title="Your daily vibe" />
             <View style={s.daily}>
               {owned.length >= 6 && daily.items.length > 0 ? (
                 <>
@@ -402,8 +403,8 @@ export function WardrobeScreen({ navigation }) {
   return (
     <Screen>
       <Heading
-        eyebrow="GOOD STYLE STARTS HERE"
-        title="Your wardrobe, reimagined."
+        eyebrow="THE ROTATION"
+        title="Your wardrobe. Main character energy."
         subtitle={`${items.length} pieces you love. A world of ways to wear them.`}
       />
       <Button
@@ -411,16 +412,12 @@ export function WardrobeScreen({ navigation }) {
         icon="plus"
         onPress={() => navigation.navigate("Clothing")}
       />
-      <View style={s.search}>
-        <Icon name="search" size={18} />
-        <TextInput
-          accessibilityLabel="Search wardrobe"
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Find a favorite piece…"
-          style={s.searchText}
-        />
-      </View>
+      <SearchBar
+        accessibilityLabel="Search wardrobe"
+        placeholder="Find a favorite piece…"
+        value={search}
+        onChangeText={setSearch}
+      />
       <View style={s.wrap}>
         {CATEGORIES.map((c) => (
           <Chip
@@ -476,7 +473,7 @@ export function LooksScreen({ navigation }) {
     <Screen>
       <Heading
         eyebrow="YOUR STYLE, COLLECTED"
-        title="Good looks. Worth keeping."
+        title="Saved fits. Endless inspo."
         subtitle="Your favorite combinations, ready for their next outing."
       />
       <View style={s.wrap}>

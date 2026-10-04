@@ -4,7 +4,11 @@ import { Text, Pressable } from "./native/i18n";
 import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaProvider,
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { useFonts } from "expo-font";
 import Feather from "@expo/vector-icons/Feather";
@@ -40,6 +44,7 @@ import { useTheme } from "./native/theme";
 const Tabs = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 function MainTabs() {
+  const insets = useSafeAreaInsets();
   const t = useT();
   const language = useSettings((state) => state.language);
   const { s, colors, dark } = useTheme();
@@ -48,44 +53,63 @@ function MainTabs() {
     <Tabs.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarLabel: t(route.name === "Looks" ? "My looks" : route.name),
-        tabBarActiveTintColor: colors.green,
+        tabBarHideOnKeyboard: true,
+        tabBarLabel: ({ focused }) => (
+          <Text
+            style={{
+              fontSize: 11,
+              marginTop: 5,
+              fontWeight: focused ? "800" : "500",
+              color: focused ? colors.pop : colors.muted,
+            }}
+          >
+            {route.name === "Looks" ? "Saved fits" : route.name}
+          </Text>
+        ),
+        tabBarActiveTintColor: colors.pop,
         tabBarInactiveTintColor: colors.muted,
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.line,
-          height: 76,
+          height: 76 + Math.max(0, insets.bottom - 12),
           paddingTop: 8,
-          paddingBottom: 12,
+          paddingBottom: Math.max(12, insets.bottom),
         },
         tabBarLabelStyle: {
           fontSize: 10,
           paddingTop: 4,
           fontFamily: language === "ja" ? "StyleMatchJapanese" : undefined,
         },
-        tabBarIcon: ({ color }) => (
-          <Icon
-            name={
-              {
-                Home: "home",
-                Wardrobe: "wardrobe",
-                Looks: "heart",
-                Profile: "user",
-              }[route.name]
-            }
-            color={color}
-            size={21}
-          />
+        tabBarIcon: ({ color, focused }) => (
+          <View
+            style={{
+              width: 58,
+              height: 32,
+              borderRadius: 16,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: focused ? colors.pop : "transparent",
+            }}
+          >
+            <Icon
+              name={
+                {
+                  Home: "home",
+                  Wardrobe: "grid",
+                  Looks: "star",
+                  Profile: "user",
+                }[route.name]
+              }
+              color={focused ? colors.onPop : color}
+              size={21}
+            />
+          </View>
         ),
       })}
     >
       <Tabs.Screen name="Home" component={HomeScreen} />
       <Tabs.Screen name="Wardrobe" component={WardrobeScreen} />
-      <Tabs.Screen
-        name="Looks"
-        component={LooksScreen}
-        options={{ tabBarLabel: t("My looks") }}
-      />
+      <Tabs.Screen name="Looks" component={LooksScreen} />
       <Tabs.Screen name="Profile" component={ProfileScreen} />
     </Tabs.Navigator>
   );

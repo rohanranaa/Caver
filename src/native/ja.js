@@ -1,4 +1,13 @@
 export default {
+  "Clear search": "検索をクリア",
+  "Saved fits": "保存コーデ",
+  "YOUR STYLE. YOUR ERA.": "今の自分を、スタイルに。",
+  "Build my fit": "コーデをつくる",
+  "Fit check": "コーデチェック",
+  "Your daily vibe": "今日のムード",
+  "THE ROTATION": "いつものお気に入り",
+  "Your wardrobe. Main character energy.": "お気に入りの服で、自分が主役に。",
+  "Saved fits. Endless inspo.": "保存したコーデで、ひらめき無限。",
   Home: "ホーム",
   Wardrobe: "ワードローブ",
   "My looks": "保存したコーデ",

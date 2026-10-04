@@ -7,13 +7,14 @@ import {
   Linking,
   useWindowDimensions,
 } from "react-native";
-import { Text, TextInput, Pressable } from "./i18n";
+import { Text, Pressable } from "./i18n";
 import * as Clipboard from "expo-clipboard";
 import { useStyleStore } from "./store";
 import { createOutfit } from "../stylematch/service";
 import { OCCASIONS, VIBES, PRODUCTS } from "../stylematch/data";
 import {
   Screen,
+  SearchBar,
   Heading,
   Button,
   Choices,
@@ -425,16 +426,12 @@ export function DiscoverScreen({ navigation, route }) {
           current availability at the retailer.
         </Text>
       </View>
-      <View style={s.search}>
-        <Icon name="search" size={18} />
-        <TextInput
-          accessibilityLabel="Search products"
-          placeholder="Find your missing piece…"
-          value={search}
-          onChangeText={setSearch}
-          style={s.searchText}
-        />
-      </View>
+      <SearchBar
+        accessibilityLabel="Search products"
+        placeholder="Find your missing piece…"
+        value={search}
+        onChangeText={setSearch}
+      />
       <Choices
         label="Brands"
         values={["All brands", ...new Set(PRODUCTS.map((p) => p.brand))]}

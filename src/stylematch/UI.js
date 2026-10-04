@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
   Modal,
+  Keyboard,
+  Animated,
+  AccessibilityInfo,
 } from "react-native";
 import { Text, Pressable, TextInput } from "../native/i18n";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -26,6 +29,11 @@ export function Screen({ children, style, testID }) {
         showsHorizontalScrollIndicator={false}
         testID={testID}
         keyboardShouldPersistTaps="handled"
+        keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+        onScrollBeginDrag={Keyboard.dismiss}
+        {...(Platform.OS === "web"
+          ? { onWheel: Keyboard.dismiss, onTouchMove: Keyboard.dismiss }
+          : {})}
         contentContainerStyle={[
           s.content,
           { paddingBottom: Math.max(32, insets.bottom + 16) },
@@ -35,6 +43,98 @@ export function Screen({ children, style, testID }) {
         {children}
       </ScrollView>
     </KeyboardAvoidingView>
+  );
+}
+export function SearchBar({
+  value,
+  onChangeText,
+  placeholder,
+  accessibilityLabel,
+}) {
+  const { s, colors } = useTheme();
+  const input = useRef(null);
+  const [focused, setFocused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(true);
+  const progress = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    let active = true;
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then((reduced) => {
+        if (active) setReducedMotion(reduced);
+      })
+      .catch(() => {});
+    const subscription = AccessibilityInfo.addEventListener(
+      "reduceMotionChanged",
+      setReducedMotion,
+    );
+    return () => {
+      active = false;
+      subscription.remove();
+    };
+  }, []);
+  useEffect(() => {
+    const animation = Animated.timing(progress, {
+      toValue: focused ? 1 : 0,
+      duration: reducedMotion ? 0 : 180,
+      useNativeDriver: false,
+    });
+    animation.start();
+    return () => animation.stop();
+  }, [focused, reducedMotion, progress]);
+  return (
+    <Animated.View
+      style={[
+        s.search,
+        {
+          borderColor: progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [colors.line, colors.pop],
+          }),
+          backgroundColor: progress.interpolate({
+            inputRange: [0, 1],
+            outputRange: [colors.card, colors.popSoft],
+          }),
+        },
+      ]}
+    >
+      <Icon
+        name="search"
+        size={20}
+        color={focused ? colors.pop : colors.muted}
+      />
+      <TextInput
+        ref={input}
+        accessibilityLabel={accessibilityLabel}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+        placeholderTextColor={colors.muted}
+        selectionColor={colors.pop}
+        cursorColor={colors.pop}
+        style={s.searchText}
+        returnKeyType="search"
+        autoCorrect={false}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        onSubmitEditing={() => {
+          input.current?.blur();
+          Keyboard.dismiss();
+        }}
+      />
+      {!!value && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Clear search"
+          style={s.iconButton}
+          onPress={() => {
+            onChangeText("");
+            input.current?.focus();
+          }}
+        >
+          <Icon name="close" size={18} color={colors.pop} />
+        </Pressable>
+      )}
+    </Animated.View>
   );
 }
 export function Button({
