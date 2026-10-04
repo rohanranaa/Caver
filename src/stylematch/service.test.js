@@ -120,3 +120,54 @@ test("an exhausted wardrobe never silently repeats a recent outfit", () => {
     }).exhausted,
   ).toBe(true);
 });
+
+test("color approach changes the recommended bottom while preserving locked tops and ownership", () => {
+  const common = { status: "owned", formal: 2, color: "Teal", style: "Casual" };
+  const top = {
+    ...common,
+    id: "top",
+    name: "Red top",
+    category: "Tops",
+    colorHex: "#FF0000",
+  };
+  const tonal = {
+    ...common,
+    id: "tonal",
+    name: "Tonal bottom",
+    category: "Bottoms",
+    colorHex: "#FF0022",
+  };
+  const bold = {
+    ...common,
+    id: "bold",
+    name: "Bold bottom",
+    category: "Bottoms",
+    colorHex: "#00FFFF",
+  };
+  const shoes = { ...common, id: "shoe", name: "Shoes", category: "Shoes" };
+  const config = {
+    ...options,
+    items: [top, tonal, bold, shoes],
+    lockedId: "top",
+    weather: { ...DEMO_WEATHER, temperature: 27 },
+  };
+  const tonalLook = recommend({ ...config, colorApproach: "Tonal" });
+  const boldLook = recommend({ ...config, colorApproach: "Bold contrast" });
+  expect(tonalLook.items.map((i) => i.id)).toEqual(["top", "tonal", "shoe"]);
+  expect(boldLook.items.map((i) => i.id)).toEqual(["top", "bold", "shoe"]);
+  expect(tonalLook.scores.total).toBe(boldLook.scores.total);
+  expect(
+    recommend({
+      ...config,
+      colorApproach: "Bold contrast",
+      items: [top, tonal, { ...bold, status: "incoming" }, shoes],
+    }).items,
+  ).toContainEqual(tonal);
+  expect(
+    recommend({
+      ...config,
+      colorApproach: "Tonal",
+      history: [{ ...tonalLook, wornOn: new Date().toISOString() }],
+    }).items,
+  ).toContainEqual(bold);
+});

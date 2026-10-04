@@ -1,4 +1,6 @@
 import React from "react";
+import { Linking } from "react-native";
+import ColorPairingCard from "./native/ColorPairingCard";
 import {
   render,
   screen,
@@ -40,11 +42,21 @@ test("native clothing form validates a name and saves an owned piece", async () 
   );
   expect(screen.getByText("Give this piece a name.")).toBeOnTheScreen();
   await fireEvent.changeText(screen.getByLabelText("Name"), "Travel shirt");
+  await fireEvent.changeText(screen.getByLabelText("Color HEX code"), "#oops");
+  await fireEvent.press(
+    screen.getByRole("button", { name: "Add to my wardrobe" }),
+  );
+  expect(
+    screen.getByText("Enter a valid HEX code, for example #E7DFCD or #ABC."),
+  ).toBeOnTheScreen();
+  expect(navigation.goBack).not.toHaveBeenCalled();
+  await fireEvent.changeText(screen.getByLabelText("Color HEX code"), "#abc");
   await fireEvent.press(
     screen.getByRole("button", { name: "Add to my wardrobe" }),
   );
   expect(useStyleStore.getState().items[0]).toMatchObject({
     name: "Travel shirt",
+    colorHex: "#AABBCC",
     status: "owned",
     category: "Tops",
   });
@@ -78,6 +90,7 @@ test("native outfit builder produces the requested occasion and navigates to its
     .mockImplementation(async (options) => outfitService.recommend(options));
   await render(<StyleScreen navigation={navigation} route={{}} />);
   await fireEvent.press(screen.getByRole("button", { name: "Office" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Bold contrast" }));
   await fireEvent.press(
     screen.getByRole("button", { name: "Create my outfit" }),
   );
@@ -88,6 +101,7 @@ test("native outfit builder produces the requested occasion and navigates to its
         expect.objectContaining({
           look: expect.objectContaining({
             occasion: "Office",
+            colorApproach: "Bold contrast",
             name: "Your next power move",
           }),
         }),
@@ -95,4 +109,39 @@ test("native outfit builder produces the requested occasion and navigates to its
     { timeout: 3000 },
   );
   request.mockRestore();
+});
+
+test("native pairing card shows HEX shades and opens Pinterest only on request, with failure feedback", async () => {
+  const open = jest.spyOn(Linking, "openURL").mockResolvedValue(undefined);
+  const look = {
+    items: [
+      { category: "Tops", name: "My top", color: "Navy", colorHex: "#123456" },
+      {
+        category: "Bottoms",
+        name: "My bottom",
+        color: "Cream",
+        colorHex: "#EEDDCC",
+      },
+    ],
+    occasion: "Office",
+    colorApproach: "Balanced",
+  };
+  await render(<ColorPairingCard look={look} />);
+  expect(screen.getByText("Top · #123456")).toBeOnTheScreen();
+  expect(screen.getByText("Bottom · #EEDDCC")).toBeOnTheScreen();
+  expect(open).not.toHaveBeenCalled();
+  await fireEvent.press(
+    screen.getByRole("button", { name: "Find inspiration on Pinterest" }),
+  );
+  expect(open).toHaveBeenCalledWith(
+    expect.stringMatching(/^https:\/\/www\.pinterest\.com\/search\/pins\//),
+  );
+  open.mockRejectedValueOnce(new Error("Unavailable"));
+  await fireEvent.press(
+    screen.getByRole("button", { name: "Find inspiration on Pinterest" }),
+  );
+  expect(useStyleStore.getState().notice).toBe(
+    "Couldn’t open Pinterest. Please try again.",
+  );
+  open.mockRestore();
 });

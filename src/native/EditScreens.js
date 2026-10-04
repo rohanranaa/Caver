@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { useStyleStore, getPersistenceError } from "./store";
 import { COLORS, CATEGORIES } from "../stylematch/data";
+import { getColorHex, normalizeHex } from "../stylematch/colorMatching";
 import {
   Screen,
   Heading,
@@ -55,6 +56,9 @@ export function ClothingScreen({ navigation, route }) {
       waterproof: false,
     },
   );
+  const [hex, setHex] = useState(
+    getColorHex(existing || { color: "Cream" }) || "",
+  );
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const { width } = useWindowDimensions();
@@ -76,8 +80,14 @@ export function ClothingScreen({ navigation, route }) {
       setError("Give this piece a name.");
       return;
     }
+    const colorHex = normalizeHex(hex);
+    if (!colorHex) {
+      setError("Enter a valid HEX code, for example #E7DFCD or #ABC.");
+      return;
+    }
     saveItem({
       ...draft,
+      colorHex,
       name: draft.name.trim(),
       id:
         existing?.id ||
@@ -102,7 +112,7 @@ export function ClothingScreen({ navigation, route }) {
       <View style={{ flexDirection: width > 800 ? "row" : "column", gap: 25 }}>
         <View style={{ flex: 1, gap: 12 }}>
           <View style={s.largeArt}>
-            <Garment item={draft} />
+            <Garment item={{ ...draft, colorHex: normalizeHex(hex) }} />
           </View>
           <View style={s.wrap}>
             <Button
@@ -158,8 +168,25 @@ export function ClothingScreen({ navigation, route }) {
             label="Color"
             values={COLORS.map((c) => c.name)}
             value={draft.color}
-            onChange={(v) => update("color", v)}
+            onChange={(v) => {
+              update("color", v);
+              setHex(getColorHex({ color: v }));
+            }}
           />
+          <Input
+            label="Color HEX code"
+            value={hex}
+            onChangeText={setHex}
+            placeholder="#E7DFCD"
+            maxLength={7}
+            autoCapitalize="characters"
+            autoCorrect={false}
+          />
+          <Text style={s.small}>
+            Use a 3- or 6-digit HEX code for the fabric shade. Pick the closest
+            color family above for palette preferences and Pinterest searches.
+            Photo colors are not detected automatically.
+          </Text>
           <Choices
             label="Style"
             values={STYLES}
@@ -260,6 +287,17 @@ export function ClothingDetailScreen({ navigation, route }) {
         title={item.name}
         subtitle={`${item.color} · ${item.category} · ${item.season}`}
       />
+      <View style={s.row}>
+        <View
+          style={[
+            s.swatch,
+            { backgroundColor: getColorHex(item) || colors.beige },
+          ]}
+        />
+        <Text style={s.body}>
+          Fabric color · {getColorHex(item) || "Not set"}
+        </Text>
+      </View>
       <View style={s.quiet}>
         <View style={s.row}>
           <Icon name="sparkle" />

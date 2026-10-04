@@ -24,6 +24,7 @@ import {
 import Icon from "../stylematch/Icon";
 import { exportWardrobe } from "../platform/export";
 import { s, colors } from "./theme";
+import ColorPairingCard from "./ColorPairingCard";
 
 export function HomeScreen({ navigation }) {
   const { items, profile, history, looks, weather, saveLook, wearLook } =
@@ -189,6 +190,9 @@ export function HomeScreen({ navigation }) {
               )}
             </View>
           </View>
+          {owned.length >= 6 && daily.items.length > 0 && (
+            <ColorPairingCard look={daily} />
+          )}
           <View style={s.section}>
             <SectionTitle
               title={`A peek into your wardrobe · ${items.length}`}

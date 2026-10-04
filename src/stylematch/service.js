@@ -1,4 +1,5 @@
 // Platform-independent outfit rules, shared by iOS, Android, and web.
+import { matchClothingColors, COLOR_APPROACHES } from "./colorMatching";
 export const outfitKey = (items) =>
   items
     .map((i) => i.id)
@@ -15,7 +16,11 @@ export function recommend({
   lockedId,
   formality = 1,
   relaxDressCode = false,
+  colorApproach = "Balanced",
 }) {
+  const approach = COLOR_APPROACHES.includes(colorApproach)
+    ? colorApproach
+    : "Balanced";
   const formal =
     !relaxDressCode &&
     (["Wedding", "Party"].includes(occasion) || formality >= 3);
@@ -42,6 +47,7 @@ export function recommend({
   if (missing.length)
     return {
       gap: missing,
+      colorApproach: approach,
       occasion,
       mood,
       items: [],
@@ -55,7 +61,8 @@ export function recommend({
   );
   const candidates = [];
   for (const top of groups[0])
-    for (const bottom of groups[1])
+    for (const bottom of groups[1]) {
+      const colorPairing = matchClothingColors(top, bottom, approach);
       for (const shoes of groups[2]) {
         // Consider layers individually so locked pieces and repeat avoidance remain accurate.
         const options =
@@ -141,19 +148,28 @@ export function recommend({
           candidates.push({
             items: combo,
             scores,
-            rank: scores.total + freshness,
+            // Keep the brief’s four-weight match score intact. Color harmony
+            // influences recommendation order separately and is shown separately.
+            rank:
+              scores.total +
+              freshness +
+              (colorPairing.available ? (colorPairing.score - 80) * 0.35 : 0),
+            colorPairing,
+            colorApproach: approach,
             occasion,
             mood,
             weather,
           });
         }
       }
+    }
   candidates.sort((a, b) => b.rank - a.rank);
   if (!candidates.length)
     return {
       items: [],
       gap: [],
       exhausted: true,
+      colorApproach: approach,
       occasion,
       mood,
       weather,
@@ -174,7 +190,7 @@ export function recommend({
     ...result,
     id: outfitKey(result.items),
     name: names[occasion],
-    explanation: `${result.items[0].color} and ${result.items[1].color.toLowerCase()} bring a balanced feel to your ${occasion.toLowerCase()} look. ${result.items.length > 3 ? "A light layer adds texture" : "A simple silhouette keeps things effortless"} at ${weather.temperature}°C, with ${result.items[2].name.toLowerCase()} to finish.`,
+    explanation: `${result.colorPairing.explanation} ${result.items.length > 3 ? "A light layer adds texture" : "A simple silhouette keeps things effortless"} at ${weather.temperature}°C, with ${result.items[2].name.toLowerCase()} to finish.`,
   };
 }
 export async function createOutfit(options) {

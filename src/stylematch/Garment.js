@@ -9,10 +9,10 @@ import Svg, {
   Circle,
   Use,
 } from "react-native-svg";
-import { COLORS } from "./data";
+import { getColorHex } from "./colorMatching";
 export default function Garment({ item }) {
   const uid = useId().replace(/:/g, "");
-  const color = COLORS.find((c) => c.name === item.color)?.hex || "#c6b89e";
+  const color = getColorHex(item) || "#c6b89e";
   if (item.image)
     return (
       <Image

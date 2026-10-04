@@ -27,11 +27,16 @@ import {
 import Garment from "../stylematch/Garment";
 import Icon from "../stylematch/Icon";
 import { s, colors } from "./theme";
+import ColorPairingCard from "./ColorPairingCard";
+import { COLOR_APPROACHES } from "../stylematch/colorMatching";
 
 export function StyleScreen({ navigation, route }) {
   const state = useStyleStore();
   const [occasion, setOccasion] = useState(route.params?.occasion || "Casual");
   const [mood, setMood] = useState(route.params?.mood || "Effortless");
+  const [colorApproach, setColorApproach] = useState(
+    route.params?.colorApproach || "Balanced",
+  );
   const [formality, setFormality] = useState("Relaxed");
   const [busy, setBusy] = useState(false);
   const active = useRef(true);
@@ -52,6 +57,7 @@ export function StyleScreen({ navigation, route }) {
         weather: state.weather,
         occasion,
         mood,
+        colorApproach,
         formality: ["Relaxed", "Smart casual", "Formal"].indexOf(formality) + 1,
         lockedId: route.params?.lockedId,
         offset: route.params?.offset || 0,
@@ -63,6 +69,7 @@ export function StyleScreen({ navigation, route }) {
           preferences: {
             occasion,
             mood,
+            colorApproach,
             formality: options.formality,
             lockedId: options.lockedId,
             offset: options.offset,
@@ -116,6 +123,12 @@ export function StyleScreen({ navigation, route }) {
         value={formality}
         onChange={setFormality}
       />
+      <Choices
+        label="How should the colors work together?"
+        values={COLOR_APPROACHES}
+        value={colorApproach}
+        onChange={setColorApproach}
+      />
       <View style={[s.quiet, s.between]}>
         <View style={s.row}>
           <Icon name="sun" />
@@ -144,7 +157,12 @@ export function StyleScreen({ navigation, route }) {
 export function ResultScreen({ navigation, route }) {
   const {
     look,
-    preferences = { occasion: look.occasion, mood: look.mood, formality: 1 },
+    preferences = {
+      occasion: look.occasion,
+      mood: look.mood,
+      formality: 1,
+      colorApproach: look.colorApproach,
+    },
   } = route.params;
   const state = useStyleStore();
   const [busy, setBusy] = useState(false);
@@ -260,6 +278,7 @@ export function ResultScreen({ navigation, route }) {
         subtitle={`${look.occasion} · ${look.mood} · ${look.weather.temperature}°C`}
       />
       <OutfitBoard items={look.items} />
+      <ColorPairingCard look={look} />
       <View style={[s.card, s.row]}>
         <View style={{ alignItems: "center", width: 110 }}>
           <Text style={s.resultScore}>
@@ -270,7 +289,7 @@ export function ResultScreen({ navigation, route }) {
         </View>
         <View style={{ flex: 1, gap: 13 }}>
           {[
-            ["skinTone", "Color match"],
+            ["skinTone", "Your palette"],
             ["occasion", "Occasion"],
             ["weather", "Weather"],
             ["mood", "Mood"],

@@ -43,6 +43,14 @@ npx expo run:ios      # Generate/build native iOS app; requires macOS/Xcode
 
 Photos are stored locally as data URIs, so temporary picker files do not disappear after a restart. The per-photo limit is approximately 2 MB; export before clearing storage or reinstalling. There is no cloud backup.
 
+## Top-to-bottom color matching
+
+Add or edit a garment to choose its color family and exact HEX shade (3 or 6 digits). Existing pieces use their named color until you set a custom shade. In **Style me**, choose **Balanced**, **Tonal**, or **Bold contrast**. Recommendations compare top/bottom hues, saturation, and lightness, then show both swatches, HEX codes, and a pairing explanation. Color harmony adjusts suggestion order separately from the brief’s four weighted scores. Saved looks retain their garment colors.
+
+These are local styling heuristics, not AI image analysis. Photos are not automatically sampled; use the HEX field to specify a fabric shade. The 0–100 pairing estimate is a style preference guide, not a calibrated confidence score.
+
+**Find inspiration on Pinterest** opens an external search using generic color families, garment type, and occasion. No wardrobe names, photos, skin data, or HEX values are included in the search. Pinterest may show related colors or require sign-in. There is no Pinterest account/API connection: the [official API specification](https://github.com/pinterest/api-description/blob/main/v5/openapi.yaml) documents approved beta access for partner Pin search, and a Pin’s dominant color describes the whole image. A provider-backed clothing analysis integration would need an approved API and suitable image analysis service.
+
 ## Still demo integrations
 
 Accounts/email verification, AI face analysis, AI clothing tagging, live location/weather, real retail feeds, checkout, and push notifications need backend/provider integration. The app does not collect a face photo; color preferences are manual. Weather is editable sample data. Recommendations and explanations use deterministic local rules. API keys must stay on a future backend.
