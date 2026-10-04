@@ -287,10 +287,12 @@ export function HomeScreen({ navigation }) {
           >
             <View style={s.between}>
               <View style={s.row}>
-                <Icon name="location" color="#c4ceb9" size={15} />
+                <Icon name="location" color={colors.weatherMuted} size={15} />
                 <Text style={s.weatherMuted}>{weather.location}</Text>
               </View>
-              <Text style={[s.eyebrow, { color: "#bdc8b0" }]}>DEMO</Text>
+              <Text style={[s.eyebrow, { color: colors.weatherMuted }]}>
+                DEMO
+              </Text>
             </View>
             <View style={s.between}>
               <View>
@@ -300,7 +302,7 @@ export function HomeScreen({ navigation }) {
               <Icon
                 name={weather.condition === "Rainy" ? "cloud-rain" : "sun"}
                 size={65}
-                color="#d9c897"
+                color={colors.lime}
               />
             </View>
             <View style={s.row}>
@@ -651,7 +653,7 @@ export function ProfileScreen({ navigation }) {
         />
       </View>
       <View style={s.weather}>
-        <Icon name="sparkle" size={30} color="#c8d6ba" />
+        <Icon name="sparkle" size={30} color={colors.sky} />
         <Text style={[s.h2, s.light]}>Good style gets more personal.</Text>
         <Text style={s.weatherMuted}>
           Your saved looks and worn pieces help keep your recommendations fresh.

@@ -285,6 +285,13 @@ export function ResultScreen({ navigation, route }) {
       />
       <OutfitBoard items={look.items} />
       <Button
+        title="View in 3D"
+        icon="box"
+        onPress={() =>
+          navigation.navigate("AvatarPreview", { items: look.items })
+        }
+      />
+      <Button
         title="Check this outfit on me"
         icon="camera"
         secondary

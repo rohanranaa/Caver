@@ -35,6 +35,7 @@ import { AuthProvider, useAuth } from "./native/AuthContext";
 import AuthScreen from "./native/AuthScreen";
 import OutfitCheckScreen from "./native/OutfitCheckScreen";
 import WeatherScreen from "./native/WeatherScreen";
+import AvatarPreviewScreen from "./native/AvatarPreviewScreen";
 import { useT } from "./native/i18n";
 import { useSettings } from "./native/settings";
 import SettingsScreen from "./native/SettingsScreen";
@@ -88,7 +89,7 @@ function MainTabs() {
               borderRadius: 16,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: focused ? colors.pop : "transparent",
+              backgroundColor: focused ? colors.tabActive : "transparent",
             }}
           >
             <Icon
@@ -100,7 +101,7 @@ function MainTabs() {
                   Profile: "user",
                 }[route.name]
               }
-              color={focused ? colors.onPop : color}
+              color={focused ? colors.tabIcon : color}
               size={21}
             />
           </View>
@@ -214,6 +215,11 @@ function AppContent() {
                 name="Account"
                 component={AuthScreen}
                 options={{ title: t("Your account"), presentation: "modal" }}
+              />
+              <Stack.Screen
+                name="AvatarPreview"
+                component={AvatarPreviewScreen}
+                options={{ title: t("3D fit studio") }}
               />
               <Stack.Screen
                 name="OutfitCheck"

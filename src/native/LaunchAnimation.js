@@ -69,7 +69,7 @@ export default function LaunchAnimation({ onFinish }) {
       </Animated.View>
       <Text style={[s.logo, { fontSize: 32 }]}>StyleMatch.</Text>
       <View style={{ flexDirection: "row", gap: 9 }}>
-        {["#b9956e", "#74795a", "#46716c"].map((color, index) => (
+        {[colors.pop, colors.sky, colors.lime].map((color, index) => (
           <Animated.View
             key={color}
             style={{
