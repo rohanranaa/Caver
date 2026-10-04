@@ -53,7 +53,7 @@ These are local styling heuristics, not AI image analysis. Photos are not automa
 
 ## Still demo integrations
 
-Accounts/email verification, AI face analysis, AI clothing tagging, live location/weather, real retail feeds, checkout, and push notifications need backend/provider integration. The app does not collect a face photo; color preferences are manual. Weather is editable sample data. Recommendations and explanations use deterministic local rules. API keys must stay on a future backend.
+AI face analysis, AI clothing tagging, real retail feeds, checkout, and push notifications remain unconnected. Authentication and outfit-photo analysis have provider adapters and require configuration below. The app does not collect a face photo; color preferences are manual. Weather uses Open-Meteo with location/city selection. Wardrobe recommendations use local rules; the optional outfit-photo check uses the configured AI server. API keys must stay on a future backend.
 
 ## Validation
 
@@ -76,3 +76,38 @@ The SDK-compatible tooling currently has upstream npm audit advisories in braces
 - `src/platform/`: image picker and platform-specific wardrobe export.
 
 The original repository's unused `src/component/` and `src/images/` assets are retained as historical source; they are not imported by the Expo application.
+
+## Live weather, accounts, and outfit checks
+
+### Weather
+
+The Home screen asks for foreground location permission and fetches current conditions from Open-Meteo. Coordinates are rounded to two decimals before the weather request and storage. If access is denied or the request fails, choose **Weather → Search city**. City results include region/country to disambiguate names; the selected city persists until **Use my current location** is selected. Current weather refreshes when Home mounts, and the Weather screen has a refresh action. Errors preserve the previous forecast; sample weather is labeled. Snow and storms also trigger waterproof footwear rules.
+
+[Open-Meteo documentation](https://open-meteo.com/en/docs): the free endpoint is for noncommercial use. Configure a commercial plan/endpoint before a commercial launch. Weather data attribution: Open-Meteo, CC BY 4.0.
+
+### Configure authentication
+
+1. Create a Supabase project. Copy `.env.example` to `.env`. Set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to the project URL and **publishable** key. Never use a service-role key in the app.
+2. Enable Email authentication and email confirmation. Configure production SMTP and email templates in Supabase. New accounts receive confirmation instructions; then they can log in with email/password.
+3. Enable Google and Apple providers in Supabase. Configure their developer-console credentials and the Supabase callback URL shown in the dashboard. Apple requires your Apple developer/service identifiers and signing configuration. Supabase stores these provider secrets, not the Expo app.
+4. Add exact app redirects to Supabase's allowlist: `stylematch://auth/callback` for a native development/production build, `http://localhost:3000/` for local web, and your deployed HTTPS web origin with a trailing slash. The app uses PKCE. Test OAuth in a native development build (`npx expo run:android` / `npx expo run:ios`); Expo Go is not the supported OAuth callback environment.
+5. Restart Metro after changing `.env`. The welcome screen supports email login, account creation, Google, Apple, and a guest option. **Profile → Account & logout** signs out the current device.
+
+Native auth tokens are stored in chunked SecureStore entries; web sessions use sessionStorage. Guest and each authenticated user's wardrobe are stored separately on the device. Logging out hides the account wardrobe and returns to the welcome screen. There is no cloud wardrobe sync, account deletion endpoint, or password recovery UI yet. Export a wardrobe before clearing app data. Local storage is not encrypted wardrobe storage.
+
+Official setup: [Supabase native deep linking](https://supabase.com/docs/guides/auth/native-mobile-deep-linking), [PKCE](https://supabase.com/docs/guides/auth/sessions/pkce-flow).
+
+### Configure AI outfit-photo analysis
+
+The **Check my outfit** screen can take a photo through the native camera or choose one from the gallery. It is an on-demand photo check, not continuous video or virtual garment try-on. Before sending, users must select **Allow photo analysis**, sign in, and tap **Analyze my outfit**. Without the service, the screen still supports local wardrobe/color/weather checks and optional brand shopping suggestions.
+
+1. Copy `server/.env.example` to `server/.env`. Set the same Supabase URL/publishable key, a server-only `OPENAI_API_KEY`, and an image-capable `OPENAI_MODEL` (default `gpt-4.1-mini`). Do not put the AI secret in any `EXPO_PUBLIC_` variable.
+2. Run `npm run server` (Node 24+). Health: `http://localhost:3001/health`. Missing provider configuration is reported and analysis returns 503.
+3. Deploy `server/` behind HTTPS, set `WEB_ORIGINS` to the exact comma-separated browser origins, and set the app's `EXPO_PUBLIC_STYLE_API_URL` to that reachable HTTPS server origin. A phone cannot reach the cloud sandbox's localhost. Native requests have no browser Origin header; Supabase bearer validation is required for every analysis.
+4. Restart/rebuild the app. The server checks the bearer with Supabase, limits requests to ten per user per hour per process, limits body size, times out upstream requests, and validates structured output. For multiple server instances, replace the process-local quota with a shared limit and add ingress limits before production.
+
+Photo bytes are transient in the request and never written by this server or application logs. The OpenAI request uses `store:false`; this does not override provider abuse-monitoring/retention policies. The output is clothing-focused advice with explicit uncertainty, not a judgment of someone's body or proof of exact sizing. It returns category suggestions only; brand links are curated app data. [OpenAI vision](https://developers.openai.com/api/docs/guides/images-vision) and [structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs).
+
+**Check my outfit → Choose your pieces** works without AI. Missing tops, bottoms, footwear, weather layers, and optional replacement choices lead to filtered sample products and brand websites. These links do not guarantee stock, current prices, or a particular size. Purchases are handled by the retailer.
+
+Additional verification: `npm run test:server`. Provider boundary tests use synthetic responses; real confirmation email delivery, Google/Apple OAuth, and AI image quality require your configured accounts and device checks.

@@ -33,7 +33,9 @@ export function recommend({
         i.category === "Shoes" ||
         i.formal >= 2) &&
       (weather.temperature <= 28 || i.category !== "Jackets") &&
-      (weather.condition !== "Rainy" || i.category !== "Shoes" || i.waterproof),
+      (!["Rainy", "Snowy", "Thunderstorms"].includes(weather.condition) ||
+        i.category !== "Shoes" ||
+        i.waterproof),
   );
   const groups = ["Tops", "Bottoms", "Shoes"].map((category) =>
     eligible.filter((i) => i.category === category),

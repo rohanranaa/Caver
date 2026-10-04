@@ -56,3 +56,21 @@ test("delete data persists an empty guest wardrobe and clears legacy storage", a
   expect(useStyleStore.getState().profile.name).toBe("Guest");
   expect(AsyncStorage.removeItem).toHaveBeenCalledWith("stylematch:v1");
 });
+
+test("account wardrobes remain separate across sign-in, logout, and another account", async () => {
+  useStyleStore.setState({ ...initialData(), accountId: "guest" });
+  const guest = useStyleStore.getState().items;
+  await useStyleStore
+    .getState()
+    .switchAccount({ id: "user-a", user_metadata: { name: "A" } });
+  expect(useStyleStore.getState().items).toEqual([]);
+  useStyleStore.getState().saveItem({ ...guest[0], id: "private-a" });
+  await useStyleStore.getState().switchAccount({ id: "user-b" });
+  expect(useStyleStore.getState().items).toEqual([]);
+  await useStyleStore.getState().switchAccount(null);
+  expect(useStyleStore.getState().items).toEqual(guest);
+  await useStyleStore.getState().switchAccount({ id: "user-a" });
+  expect(useStyleStore.getState().items.map((item) => item.id)).toEqual([
+    "private-a",
+  ]);
+});

@@ -27,6 +27,7 @@ import {
 import Garment from "../stylematch/Garment";
 import Icon from "../stylematch/Icon";
 import { s, colors } from "./theme";
+import { BRAND_LINKS } from "../stylematch/outfitCheck";
 import ColorPairingCard from "./ColorPairingCard";
 import { COLOR_APPROACHES } from "../stylematch/colorMatching";
 
@@ -251,7 +252,9 @@ export function ResultScreen({ navigation, route }) {
               <Button
                 title="Explore the collection"
                 secondary
-                onPress={() => navigation.navigate("Discover")}
+                onPress={() =>
+                  navigation.navigate("Discover", { categories: look.gap })
+                }
               />
             </View>
           </>
@@ -278,6 +281,14 @@ export function ResultScreen({ navigation, route }) {
         subtitle={`${look.occasion} · ${look.mood} · ${look.weather.temperature}°C`}
       />
       <OutfitBoard items={look.items} />
+      <Button
+        title="Check this outfit on me"
+        icon="camera"
+        secondary
+        onPress={() =>
+          navigation.navigate("OutfitCheck", { items: look.items })
+        }
+      />
       <ColorPairingCard look={look} />
       <View style={[s.card, s.row]}>
         <View style={{ alignItems: "center", width: 110 }}>
@@ -350,70 +361,8 @@ export function ResultScreen({ navigation, route }) {
   );
 }
 
-export function WeatherScreen({ navigation }) {
-  const { weather, setWeather } = useStyleStore();
-  const [temperature, setTemperature] = useState(String(weather.temperature));
-  const [location, setLocation] = useState(weather.location);
-  const [condition, setCondition] = useState(weather.condition);
-  const [error, setError] = useState("");
-  const save = () => {
-    const temp = Number(temperature);
-    if (
-      !temperature.trim() ||
-      !Number.isFinite(temp) ||
-      temp < -40 ||
-      temp > 55 ||
-      !location.trim()
-    ) {
-      setError("Enter a location and a temperature between −40°C and 55°C.");
-      return;
-    }
-    setWeather({
-      ...weather,
-      temperature: temp,
-      feelsLike: temp,
-      location: location.trim(),
-      condition,
-    });
-    navigation.goBack();
-  };
-  return (
-    <Screen>
-      <Heading
-        eyebrow="DRESS FOR THE DAY"
-        title="What’s the forecast?"
-        subtitle="Set your weather to help us pick the right layers. Live weather isn’t connected yet."
-      />
-      <Input
-        label="Location"
-        value={location}
-        onChangeText={setLocation}
-        maxLength={60}
-      />
-      <Input
-        label="Temperature (°C)"
-        value={temperature}
-        onChangeText={setTemperature}
-        keyboardType="numbers-and-punctuation"
-        maxLength={5}
-      />
-      <Choices
-        label="Conditions"
-        values={["Sunny", "Partly cloudy", "Cloudy", "Rainy"]}
-        value={condition}
-        onChange={setCondition}
-      />
-      {!!error && (
-        <Text accessibilityRole="alert" style={s.error}>
-          {error}
-        </Text>
-      )}
-      <Button title="Update forecast" icon="check" onPress={save} />
-    </Screen>
-  );
-}
-
-export function DiscoverScreen({ navigation }) {
+export function DiscoverScreen({ navigation, route }) {
+  const categories = route?.params?.categories || [];
   const { profile } = useStyleStore();
   const { width } = useWindowDimensions();
   const [brand, setBrand] = useState("All brands");
@@ -421,6 +370,7 @@ export function DiscoverScreen({ navigation }) {
   const [price, setPrice] = useState("All prices");
   const products = PRODUCTS.filter(
     (p) =>
+      (!categories.length || categories.includes(p.category)) &&
       (brand === "All brands" || p.brand === brand) &&
       `${p.name} ${p.brand} ${p.color}`
         .toLowerCase()
@@ -438,6 +388,33 @@ export function DiscoverScreen({ navigation }) {
         title="Meet your next favorite."
         subtitle="Pieces that work with your wardrobe. And with you."
       />
+      {!!categories.length && (
+        <View style={s.card}>
+          <Text style={s.h3}>Complete your look: {categories.join(", ")}</Text>
+          <Text style={s.small}>
+            Browse these brands for the missing or replacement pieces. Check
+            sizes, prices, and availability on their sites.
+          </Text>
+          {BRAND_LINKS.filter((brand) =>
+            brand.categories.some((category) => categories.includes(category)),
+          ).map((brand) => (
+            <Button
+              key={brand.name}
+              title={`Browse ${brand.name}`}
+              secondary
+              onPress={async () => {
+                try {
+                  await Linking.openURL(brand.url);
+                } catch {
+                  useStyleStore
+                    .getState()
+                    .notify("Could not open the brand. Please retry.");
+                }
+              }}
+            />
+          ))}
+        </View>
+      )}
       <View style={s.info}>
         <Text style={s.small}>
           Sample collection. Prices and match scores are illustrative; check

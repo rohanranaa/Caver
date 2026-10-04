@@ -86,6 +86,44 @@ export const useStyleStore = create(
   persist(
     (set, get) => ({
       ...initialData(),
+      accountId: "guest",
+      switchAccount: async (user) => {
+        const current = get();
+        const nextId = user?.id || "guest";
+        if (current.accountId === nextId) return;
+        const snapshot = ({ items, profile, looks, history, weather }) => ({
+          items,
+          profile,
+          looks,
+          history,
+          weather,
+        });
+        await AsyncStorage.setItem(
+          `stylematch:account:${current.accountId || "guest"}`,
+          JSON.stringify(snapshot(current)),
+        );
+        const raw = await AsyncStorage.getItem(`stylematch:account:${nextId}`);
+        const saved = raw ? JSON.parse(raw) : null;
+        if (saved && !validData(saved))
+          throw new Error("Invalid saved wardrobe");
+        set({
+          ...(saved || {
+            ...initialData(),
+            items: [],
+            looks: [],
+            history: [],
+            profile: {
+              ...INITIAL_PROFILE,
+              name: user?.user_metadata?.name || "Guest",
+              styles: [],
+              glowColors: [],
+              avoidColors: [],
+            },
+          }),
+          accountId: nextId,
+          notice: "",
+        });
+      },
       ready: false,
       notice: "",
       setReady: () => set({ ready: true, notice: persistenceError }),
@@ -165,12 +203,13 @@ export const useStyleStore = create(
     {
       name: "stylematch:expo:v1",
       storage: createJSONStorage(() => storage),
-      partialize: ({ items, profile, looks, history, weather }) => ({
+      partialize: ({ items, profile, looks, history, weather, accountId }) => ({
         items,
         profile,
         looks,
         history,
         weather,
+        accountId,
       }),
       onRehydrateStorage: () => (state) => state?.setReady(),
     },

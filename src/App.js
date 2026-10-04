@@ -17,7 +17,6 @@ import {
 import {
   StyleScreen,
   ResultScreen,
-  WeatherScreen,
   DiscoverScreen,
   ProductScreen,
 } from "./native/StylingScreens";
@@ -27,6 +26,10 @@ import {
   PreferencesScreen,
   ColorIntroScreen,
 } from "./native/EditScreens";
+import { AuthProvider, useAuth } from "./native/AuthContext";
+import AuthScreen from "./native/AuthScreen";
+import OutfitCheckScreen from "./native/OutfitCheckScreen";
+import WeatherScreen from "./native/WeatherScreen";
 import Icon from "./stylematch/Icon";
 import { s, colors } from "./native/theme";
 const Tabs = createBottomTabNavigator();
@@ -85,6 +88,14 @@ function MainTabs() {
   );
 }
 export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
+function AppContent() {
+  const auth = useAuth();
   const ready = useStyleStore((state) => state.ready);
   const notice = useStyleStore((state) => state.notice);
   const dismiss = useStyleStore((state) => state.dismiss);
@@ -98,7 +109,7 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar style="dark" />
       <SafeAreaView style={s.fill} edges={["top", "left", "right"]}>
-        {!ready || (!fontsLoaded && !fontError) ? (
+        {!ready || !auth.ready || (!fontsLoaded && !fontError) ? (
           <View
             style={[
               s.screen,
@@ -107,10 +118,14 @@ export default function App() {
           >
             <Text style={s.logo}>StyleMatch.</Text>
             <ActivityIndicator color={colors.green} />
+            {!!auth.error && <Text style={s.error}>{auth.error}</Text>}
           </View>
+        ) : !auth.session && !auth.guest ? (
+          <AuthScreen />
         ) : (
           <NavigationContainer theme={theme}>
             <Stack.Navigator
+              initialRouteName="Main"
               screenOptions={{
                 headerShadowVisible: false,
                 headerStyle: { backgroundColor: colors.bg },
@@ -119,6 +134,16 @@ export default function App() {
                 contentStyle: { backgroundColor: colors.bg },
               }}
             >
+              <Stack.Screen
+                name="Account"
+                component={AuthScreen}
+                options={{ title: "Your account", presentation: "modal" }}
+              />
+              <Stack.Screen
+                name="OutfitCheck"
+                component={OutfitCheckScreen}
+                options={{ title: "Outfit check" }}
+              />
               <Stack.Screen
                 name="Main"
                 component={MainTabs}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -23,6 +23,8 @@ import {
 } from "../stylematch/UI";
 import Icon from "../stylematch/Icon";
 import { exportWardrobe } from "../platform/export";
+import { currentLocationWeather, fetchWeather } from "../platform/weather";
+import { useAuth } from "./AuthContext";
 import { s, colors } from "./theme";
 import ColorPairingCard from "./ColorPairingCard";
 
@@ -30,6 +32,29 @@ export function HomeScreen({ navigation }) {
   const { items, profile, history, looks, weather, saveLook, wearLook } =
     useStyleStore();
   const [offset, setOffset] = useState(0);
+  const [weatherError, setWeatherError] = useState("");
+  useEffect(() => {
+    let active = true;
+    const previous = useStyleStore.getState().weather;
+    const request =
+      previous.mode === "city"
+        ? fetchWeather(previous)
+        : currentLocationWeather();
+    request
+      .then((next) => {
+        if (active && useStyleStore.getState().weather === previous)
+          useStyleStore.getState().setWeather(next);
+      })
+      .catch((error) => {
+        if (active) setWeatherError(error.message);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+  useEffect(() => {
+    setWeatherError("");
+  }, [weather]);
   const { width } = useWindowDimensions();
   const wide = width > 850;
   const daily = useMemo(
@@ -73,6 +98,24 @@ export function HomeScreen({ navigation }) {
           onPress={() => navigation.navigate("Style")}
         />
       </View>
+      {!!weatherError && (
+        <View style={s.info}>
+          <Text style={s.small}>
+            {weatherError} Previous weather is shown below.
+          </Text>
+          <Button
+            title="Choose weather location"
+            secondary
+            onPress={() => navigation.navigate("Weather")}
+          />
+        </View>
+      )}
+      <Button
+        title="Check my outfit"
+        icon="camera"
+        secondary
+        onPress={() => navigation.navigate("OutfitCheck")}
+      />
       <View style={{ flexDirection: wide ? "row" : "column", gap: 22 }}>
         <View style={{ flex: 1, gap: 23 }}>
           <View style={s.section}>
@@ -231,7 +274,13 @@ export function HomeScreen({ navigation }) {
           </Pressable>
         </View>
         <View style={{ width: wide ? 290 : "100%", gap: 20 }}>
-          <SectionTitle title="Outlook for today" />
+          <SectionTitle
+            title={
+              weather.source === "Open-Meteo"
+                ? "Weather at your location"
+                : "Sample weather"
+            }
+          />
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Change weather"
@@ -504,6 +553,7 @@ export function LooksScreen({ navigation }) {
 }
 
 export function ProfileScreen({ navigation }) {
+  const auth = useAuth();
   const state = useStyleStore();
   const { profile, items, looks } = state;
   const [deleting, setDeleting] = useState(false);
@@ -534,7 +584,14 @@ export function ProfileScreen({ navigation }) {
           </Text>
         </View>
         <Text style={s.h2}>{profile.name}</Text>
-        <Text style={s.small}>Local guest profile · saved on this device</Text>
+        <Text style={s.small}>
+          {auth?.session?.user.email || "Guest profile"} · saved on this device
+        </Text>
+        <Button
+          title={auth?.session ? "Account & logout" : "Log in / create account"}
+          secondary
+          onPress={() => navigation.navigate("Account")}
+        />
         <View
           style={[
             s.row,

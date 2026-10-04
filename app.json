@@ -33,7 +33,15 @@
         }
       ],
       "expo-font",
-      "expo-sharing"
+      "expo-sharing",
+      "expo-secure-store",
+      "expo-web-browser",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "StyleMatch uses your approximate location to suggest clothes for the current weather."
+        }
+      ]
     ],
     "icon": "./assets/icon.png"
   }

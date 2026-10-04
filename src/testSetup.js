@@ -16,3 +16,13 @@ jest.mock("expo-sharing", () => ({
   shareAsync: jest.fn(),
 }));
 jest.mock("expo-clipboard", () => ({ setStringAsync: jest.fn() }));
+
+jest.mock("expo-location", () => ({
+  requestForegroundPermissionsAsync: jest.fn(),
+  getCurrentPositionAsync: jest.fn(),
+  Accuracy: { Balanced: 3 },
+}));
+jest.mock("./native/AuthContext", () => ({
+  useAuth: () => ({ session: null }),
+  AuthProvider: ({ children }) => children,
+}));
